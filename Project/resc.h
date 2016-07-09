@@ -1,0 +1,42 @@
+#define IDC_EDT1                1001
+#define IDC_DOMAIN              1003
+#define IDC_UNAME               1004
+#define IDC_PWD                 1005
+#define IDC_STC1                1006
+#define IDC_STC2                1007
+#define IDC_MAILTEXT            1008
+#define IDC_MAILTO              1009
+#define IDC_TITLE               1010
+#define IDC_MAILFROM            1011
+ 
+#define IDC_MAILINFO            1080
+#define IDC_DOMAIN 1003
+#define IDC_UNAME 1004
+#define IDC_PWD 1005
+#define IDC_STC1 1006
+#define IDC_STC2 1007
+#define IDC_MAILTEXT 1008
+#define IDC_MAILTO 1009
+#define IDC_TITLE 1010
+#define IDC_MAILFROM 1011
+#define IDC_MAILINFO 1080
+#define IDD_DLG1 1000
+#define IDC_GRP1 1001
+#define IDC_GRP2 1002
+#define IDC_TRV1 1003
+#define IDC_LSV1 1004
+ 
+#define IDC_CREATEMAIL 1006
+#define IDC_RECVMAIL 1007
+#define IDC_DELMAIL 1008
+#define IDC_STC4 1009
+#define IDC_REB1 1010
+#define IDR_MENU1 10000
+#define IDM_FILE 10001
+#define IDM_ 10006
+#define IDM_EDIT 10002
+#define IDM_VIEW 10003
+#define IDM_TOOLS 10004
+#define IDM_OPTION 10007
+#define IDM_HELP 10005
+

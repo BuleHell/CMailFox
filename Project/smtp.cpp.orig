@@ -1,0 +1,137 @@
+#include "smtp.h"
+#define IDC_LST1 1002
+#define BUFSIZE 4096
+extern HWND g_hwnd;
+extern UserOptionInfo USERMAIL;
+extern char g_all[10][512];
+void init()
+{
+    WSADATA wsad;
+    int n=WSAStartup(MAKEWORD(2,2),&wsad);
+    if (n!=0)
+        MessageBox(NULL,"error","",0);
+}
+FILE *fpp;
+
+bool SmtpNegociation(char *e64username,char *e64password,char *username,SOCKET s);
+bool SendMail(SOCKET s,char *mailfrom,char *rept,char *filetosend);
+void smtpCONN(char *filetosend,char *mailsendto)
+{
+    fpp=fopen("c:\\err.txt","wb+");
+    hostent * remoteip=gethostbyname(USERMAIL.smtpserver);
+    if (NULL==remoteip)
+    {
+
+
+        return;
+    }
+    puts(USERMAIL.smtpserver);
+    SOCKADDR_IN saddr;
+    memcpy(&	saddr.sin_addr,remoteip->h_addr,4);
+    saddr.sin_family=AF_INET;
+    saddr.sin_port=htons(USERMAIL.smtpport);
+
+    SOCKET s=socket(AF_INET,SOCK_STREAM,0);
+    int nRe=connect(s,(sockaddr*)&saddr,sizeof(saddr));
+    if (nRe!=0)
+    {
+        MessageBox(g_hwnd,"连接失败","",0);
+        fclose(fpp);
+        return;
+    }
+    char ReceiveMsg[CSIZE];
+    int ncode=0;
+
+    recv(s,ReceiveMsg,CSIZE,0);
+    sscanf(ReceiveMsg,"%d",&ncode);
+if(ncode!=220)
+{
+	puts(ReceiveMsg);
+        MessageBox(g_hwnd,"连接服务器失败","",0);
+        fclose(fpp);
+        return;	
+}
+    bool hr= SmtpNegociation(USERMAIL.e64uname,USERMAIL.e64upass,USERMAIL.username,s);
+    if (!hr)
+    {
+        MessageBox(g_hwnd,"发送密码验证失败","",0);
+        fclose(fpp);
+        return;
+    }
+    SendMail(s,USERMAIL.usermailaddr,mailsendto,filetosend);
+    fclose(fpp);
+    closesocket(s);
+}
+
+bool SmtpNegociation(char *e64username,char *e64password,char *username,SOCKET s)
+{
+
+    char SendMsg[BUFSIZE],ReceiveMsg[BUFSIZE];
+    int succeed=0,recved=0;
+
+    sprintf(SendMsg,"EHLO %s\r\n",username);
+    send(s,SendMsg,strlen(SendMsg),0);
+ 
+        recv(s,ReceiveMsg,BUFSIZE,0);
+ 
+	puts(ReceiveMsg);
+ 
+    sprintf(SendMsg,"AUTH LOGIN\r\n");
+    send(s,SendMsg,strlen(SendMsg),0);
+    recv(s,ReceiveMsg,BUFSIZE,0);
+    sprintf(SendMsg,"%s\r\n",e64username);
+    send(s,SendMsg,strlen(SendMsg),0);
+    recv(s,ReceiveMsg,BUFSIZE,0);
+    sprintf(SendMsg,"%s\r\n",e64password);
+    send(s,SendMsg,strlen(SendMsg),0);
+     recv(s,ReceiveMsg,BUFSIZE,0);
+     
+    sscanf(ReceiveMsg,"%d",&succeed);
+    printf("%d\n",succeed);
+    return succeed==235?1:0;
+
+}
+
+bool SendMail(SOCKET s,char *mailfrom,char *rept,char *filetosend)
+{
+	puts("beginsendmail");
+    char Sendbuf[CSIZE],ReceiveMsg[CSIZE];
+    sprintf(Sendbuf,"MAIL FROM:<%s>\r\n",mailfrom);
+    send(s,Sendbuf,strlen(Sendbuf),0);
+    recv(s,ReceiveMsg,CSIZE,0);
+    sprintf(Sendbuf,"RCPT TO:<%s>\r\n",mailfrom);
+    send(s,Sendbuf,strlen(Sendbuf),0);
+    recv(s,ReceiveMsg,CSIZE,0);
+    sprintf(Sendbuf,"DATA\r\n");
+    send(s,Sendbuf,strlen(Sendbuf),0);
+    recv(s,ReceiveMsg,CSIZE,0);
+    FILE *fp=fopen(filetosend,"rb");
+    char sendbuf[CSIZE+1];
+    if (fp==NULL)
+    {
+        return 0;
+    }
+    int nfileread;
+    while (1)
+    {
+        nfileread=	fread(sendbuf,CSIZE,1,fp ) ;
+        if (nfileread<=0)
+        {
+            fclose(fp);
+            break;
+        }
+        send(s,sendbuf,nfileread,0);
+    }
+
+    recv(s,ReceiveMsg,CSIZE,0);
+    int nisok=0;
+    sscanf(ReceiveMsg,"%d",&nisok);
+
+    return nisok==250?1:0;
+}
+
+void erroroutput(FILE  *fp,char *errorcode)
+{
+    fwrite(errorcode,strlen(errorcode),1,fp);
+
+}
